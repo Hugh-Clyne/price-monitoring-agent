@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+
+# Environment
+.env
+
+# SQLite DB
+data/
+*.db
+
+# OS files
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Secrets
+*.env
+.env.*
+
+# Logs
+*.log
+
+# Python virtual env (if you ever create one locally)
+venv/
+env/
