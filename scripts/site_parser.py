@@ -4,8 +4,6 @@ from bs4 import BeautifulSoup
 import json
 from urllib.parse import urlparse
 
-#MVP Test variables
-TESTLINK = "https://www.blenderseyewear.com/collections/all-mens-sunglasses/products/canyon-black-tundra"
 HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
@@ -154,26 +152,4 @@ def extract_data_from_html(html):
     return None
 
 #Testing
-if __name__ == "__main__":
-    test_url = TESTLINK
-
-    print("Testing URL:", test_url)
-
-    valid, clean_url = is_valid_url(test_url)
-    print("Valid URL:", valid)
-    print("Clean URL:", clean_url)
-
-    if valid:
-        response = safe_get(clean_url)
-
-        if response:
-            print("Status code:", response.status_code)
-            print("Final URL:", response.url)
-
-            is_shopify = shopify_check_from_html(response.text)
-            print("Is Shopify:", is_shopify)
-
-            product_data = extract_data_from_html(response.text)
-            print("Extracted Product Data:", product_data)
-        else:
-            print("Request Failed")
+   
