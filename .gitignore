@@ -25,3 +25,7 @@ data/
 # Python virtual env
 venv/
 env/
+
+# Conda environments
+.conda/
+envs/

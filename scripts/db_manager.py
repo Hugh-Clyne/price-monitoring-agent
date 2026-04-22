@@ -95,6 +95,20 @@ def create_db():
         """)
 
         c.execute("""
+            CREATE TABLE IF NOT EXISTS monitoring_settings(
+            setting_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id INTEGER NOT NULL UNIQUE,
+            alert_email TEXT NOT NULL,
+            check_frequency TEXT NOT NULL,
+            alert_threshold_pct REAL NOT NULL DEFAULT 5,
+            last_checked_at DATETIME,
+            next_check_at DATETIME,
+            FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+            );
+            """) 
+        
+
+        c.execute("""
             CREATE INDEX IF NOT EXISTS idx_companies_cust_id
             ON companies(cust_id);
         """)
@@ -352,6 +366,63 @@ def add_price_at_time(product_id, price, currency=None, source=None, captured_at
         """, (product_id, price, currency, source, captured_at))
         return c.lastrowid
 
+def upsert_monitoring_settings(product_id, alert_email, check_frequency, alert_threshold_pct, next_check_at):
+    """
+    Inserts or updates monitoring settings for a product.
+    """
+    with get_connection() as conn:
+        c = conn.cursor()
+        c.execute("""
+            INSERT INTO monitoring_settings (
+                product_id, alert_email, check_frequency, alert_threshold_pct, next_check_at
+            )
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(product_id) DO UPDATE SET
+                alert_email = excluded.alert_email,
+                check_frequency = excluded.check_frequency,
+                alert_threshold_pct = excluded.alert_threshold_pct,
+                next_check_at = excluded.next_check_at
+        """, (product_id, alert_email, check_frequency, alert_threshold_pct, next_check_at))
+
+def get_monitoring_settings(product_id):
+    """
+    Returns monitoring settings for a product.
+    """
+    with get_connection() as conn:
+        c = conn.cursor()
+        c.execute("""
+            SELECT *
+            FROM monitoring_settings
+            WHERE product_id = ?
+        """, (product_id,))
+        row = c.fetchone()
+        return dict(row) if row else None
+
+def get_all_monitoring_settings():
+    """
+    Returns all monitoring settings keyed by product_id.
+    """
+    with get_connection() as conn:
+        c = conn.cursor()
+        c.execute("""
+            SELECT *
+            FROM monitoring_settings
+        """)
+        rows = c.fetchall()
+        return {row["product_id"]: dict(row) for row in rows}
+
+def update_last_checked(product_id, next_check_at):
+    """
+    Updates last_checked_at and next_check_at after a run.
+    """
+    with get_connection() as conn:
+        c = conn.cursor()
+        c.execute("""
+            UPDATE monitoring_settings
+            SET last_checked_at = CURRENT_TIMESTAMP,
+                next_check_at = ?
+            WHERE product_id = ?
+        """, (next_check_at, product_id))
 
 if __name__ == "__main__":
     create_db()
